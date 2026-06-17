@@ -3,7 +3,6 @@ import type { Context } from "telegraf";
 import type { Update } from "telegraf/types";
 import { rootAgent } from "../agents/orchetrator/agent.js";
 import { InMemorySessionService, Runner } from "@google/adk";
-import { startActiveObservation, startObservation } from "@langfuse/tracing";
 
 interface MessageStrategy {
   handle: (message: string) => Promise<void>;
@@ -36,56 +35,24 @@ export class TextMessageStrategy implements MessageStrategy {
       let replyText = "";
       const userMessage = this.ctx?.text;
 
-      await startActiveObservation("user-request", async (span) => {
-        span.update({
-          input: { query: userMessage },
-        });
-
-        const generation = startObservation(
-          "llm-call",
-          {
-            model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
-            input: [
-              {
-                role: "user",
-                parts: [
-                  {
-                    text: String(userMessage),
-                  },
-                ],
-              },
-            ],
-          },
-          { asType: "generation" },
-        );
-
-        const executionStream = runner.runAsync({
-          sessionId: String(this.ctx.message?.from.id),
-          userId: String(this.ctx.chat?.id),
-          newMessage: {
-            role: "user",
-            parts: [
-              {
-                text: String(userMessage),
-              },
-            ],
-          },
-        });
-
-        for await (const event of executionStream) {
-          if (event.finishReason === "STOP" && event.content?.parts) {
-            replyText = event.content.parts.map((part) => part.text).join("\n");
-          }
-        }
-
-        generation
-          .update({
-            output: { content: replyText },
-          })
-          .end();
-
-        span.update({ output: "Successfully answered" });
+      const executionStream = runner.runAsync({
+        sessionId: String(this.ctx.message?.from.id),
+        userId: String(this.ctx.chat?.id),
+        newMessage: {
+          role: "user",
+          parts: [
+            {
+              text: String(userMessage),
+            },
+          ],
+        },
       });
+
+      for await (const event of executionStream) {
+        if (event.finishReason === "STOP" && event.content?.parts) {
+          replyText = event.content.parts.map((part) => part.text).join("\n");
+        }
+      }
 
       this.ctx.reply(replyText);
     } catch (error) {

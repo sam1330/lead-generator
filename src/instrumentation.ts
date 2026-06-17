@@ -1,9 +1,18 @@
 import 'dotenv/config';
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { LangfuseSpanProcessor } from '@langfuse/otel';
+import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 
-// Initialize the OpenTelemetry SDK to grab ADK's native hooks
-export const sdk = new NodeSDK({
-  traceExporter: new OTLPTraceExporter(), // Automatically pulls ENDPOINT and HEADERS from your .env
+// 1. Initialize Langfuse's dedicated OTel Span Processor
+// It automatically reads LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, and LANGFUSE_BASE_URL from your .env
+const langfuseProcessor = new LangfuseSpanProcessor();
+
+// 2. Setup the global Node trace provider
+const provider = new NodeTracerProvider({
+  spanProcessors: [langfuseProcessor],
 });
 
+// 3. Register it globally. 
+// This hooks into all standard OTel instrumentation libraries automatically, including ADK.
+provider.register();
+
+console.log("🛡️ Global Langfuse automatic tracer registered.");

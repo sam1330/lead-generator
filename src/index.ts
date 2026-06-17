@@ -1,3 +1,4 @@
+import "./instrumentation.js"
 import 'dotenv/config';
 import telegramBot from "./telegram/index.js";
 import { NodeSDK } from "@opentelemetry/sdk-node";

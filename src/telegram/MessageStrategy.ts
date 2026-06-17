@@ -1,9 +1,13 @@
 import type { Context } from "telegraf";
 import type { Update } from "telegraf/types";
+import { rootAgent } from "../agents/orchetrator/agent.js";
+import { InMemorySessionService, Runner } from "@google/adk";
 
 interface MessageStrategy {
     handle: (message: string) => Promise<void>;
 }
+
+const sessionService = new InMemorySessionService();
 
 export class TextMessageStrategy implements MessageStrategy {
     private ctx: Context<Update>;
@@ -14,7 +18,43 @@ export class TextMessageStrategy implements MessageStrategy {
 
     async handle(): Promise<void> {
         // Handle text message
-        this.ctx.reply("Hello! welcome to your AI Lead Generator - Text");
+        sessionService.createSession({
+            appName: "lead_generator",
+            sessionId: String(this.ctx.message?.from.id),
+            userId: String(this.ctx.chat?.id),
+        });
+
+        try{
+            const runner = new Runner({
+                appName: "lead_generator",
+                agent: rootAgent,
+                sessionService
+            });
+
+            let replyText = "";
+
+            const executionStream = runner.runAsync({
+                sessionId: String(this.ctx.message?.from.id),
+                userId: String(this.ctx.chat?.id),
+                newMessage: {
+                    role: 'user',
+                    parts: [{
+                        text: String(this.ctx?.text)
+                    }]
+                }
+            });
+
+            for await (const event of executionStream) {
+                if(event.finishReason === "STOP" && event.content?.parts) {
+                    replyText = event.content.parts.map(part => part.text).join("\n");
+                }
+            }
+
+            this.ctx.reply(replyText);
+        } catch (error) {
+            console.log(error);
+            this.ctx.reply("there has been a problem executing this task");
+        }
     }
 }
 

@@ -1,5 +1,13 @@
+import 'dotenv/config';
 import telegramBot from "./telegram/index.js";
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { LangfuseSpanProcessor } from "@langfuse/otel";
 
+const sdk = new NodeSDK({
+  spanProcessors: [new LangfuseSpanProcessor()],
+});
+
+sdk.start();
 
 telegramBot.launch();
 

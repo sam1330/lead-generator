@@ -11,19 +11,28 @@ interface MessageStrategy {
 const sessionService = new InMemorySessionService();
 
 export class TextMessageStrategy implements MessageStrategy {
-  private ctx: Context<Update>;
+  private readonly ctx: Context<Update>;
 
   constructor(ctx: Context<Update>) {
     this.ctx = ctx;
   }
 
   async handle(): Promise<void> {
-    // Handle text message
-    sessionService.createSession({
+
+    const currentSession = await sessionService.getSession({
       appName: "lead_generator",
       sessionId: String(this.ctx.message?.from.id),
       userId: String(this.ctx.chat?.id),
     });
+
+    if (!currentSession) {
+      // Create new session
+      sessionService.createSession({
+        appName: "lead_generator",
+        sessionId: String(this.ctx.message?.from.id),
+        userId: String(this.ctx.chat?.id),
+      });
+    }
 
     try {
       const runner = new Runner({

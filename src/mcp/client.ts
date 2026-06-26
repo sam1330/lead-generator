@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 export class MCPClient {
-  private mcp: Client;
+  private readonly mcp: Client;
   private transport: StdioClientTransport | null = null;
   private tools: Tool[] = [];
 
@@ -50,6 +50,10 @@ export class MCPClient {
     }
   }
 
+  async listTools() {
+    
+  }
+
   async cleanup() {
     this.mcp.close();
   }
@@ -69,5 +73,3 @@ const main = async () => {
     process.exit(0);
   }
 };
-
-main();

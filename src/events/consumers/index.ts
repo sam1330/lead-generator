@@ -1,16 +1,16 @@
 import { agentBus, EVENTS } from "../brokers/index.js";
 
 export type PayloadParams = {
-    context: {
-        sessionId: string;
-        userId: string;
-    },
+    // context: {
+    //     sessionId: string;
+    //     userId: string;
+    // },
     instructions: string
 };
 
 agentBus.on(EVENTS.DISCOVERY.SEARCH_REQUESTED, async (payload: PayloadParams) => { 
     // Invoke discovery agent.
-    console.log(payload);
+    console.log('Discovery agent invoked', payload);
 });
 
 agentBus.on(EVENTS.DISCOVERY.SEARCH_COMPLETED, async (payload: PayloadParams) => {

@@ -1,5 +1,6 @@
 import "./instrumentation.js"
 import 'dotenv/config';
+import "./events/consumers/index.js"; 
 import telegramBot from "./telegram/index.js";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { LangfuseSpanProcessor } from "@langfuse/otel";

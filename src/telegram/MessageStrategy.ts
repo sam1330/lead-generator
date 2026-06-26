@@ -72,7 +72,7 @@ export class TextMessageStrategy implements MessageStrategy {
 }
 
 export class AudioMessageStrategy implements MessageStrategy {
-  private ctx: Context<Update>;
+  private readonly ctx: Context<Update>;
 
   constructor(ctx: Context<Update>) {
     this.ctx = ctx;
